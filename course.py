@@ -30,7 +30,7 @@ class Course(object):
   Student's course, grade and taken attributes are stored here. If used in 
   a more generic fashion, just ignore those attributes.
   """
-  def __init__(self, course_id, course_name, credits=0, sugg_semester=None, taken=False, earned_grade=-1.0, course_prereq=None, course_coreq=None, requires_senior_standing=False, requires_dept_approval=False):
+  def __init__(self, course_id, course_name, credits=0, sugg_semester=0, taken=False, earned_grade=-1.0, course_prereq=None, course_coreq=None, requires_senior_standing=False, requires_dept_approval=False):
     """
     This will create an instance of the class and set required attributes.
 
@@ -47,7 +47,7 @@ class Course(object):
       -sugg_semester (Optional[int]): An integer enumeration for the suggested
         semester that the class should be taken. 1 indicates the 1st year,
         first semester while 8 indicates 4th year, second semester. Only used
-        for courses required by major. A value of None will indicated electives
+        for courses required by major. A value of 0 will indicated electives
         or other courses.
 
       -taken (Optional[bool]): A boolean value indicating that the course

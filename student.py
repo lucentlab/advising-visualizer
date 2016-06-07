@@ -140,7 +140,7 @@ class Student(object):
             else:
               course_name = " ".join(map(str, sl[2:-1]))
 
-            course_obj = Course(sl[0] + "-" + sl[1], course_name, 0, None,
+            course_obj = Course(sl[0] + "-" + sl[1], course_name, 0, 0,
                                   True, sl[-1])
           elif (sentinel == 1):
             val = line.strip().split()
@@ -164,6 +164,9 @@ class Student(object):
 
   def returnMajorReqs(self):
     return self.major_reqs.returnCourses()
+
+  def returnCourses(self):
+    return self.taken_courses.returnCourses()
 
   """
   Print functions
