@@ -23,6 +23,7 @@
 #
 # Imports
 from __future__ import print_function
+import os.path
 from course import Course
 from courses import Courses
 import FAPlib
@@ -53,6 +54,28 @@ class Student(object):
     self.major_reqs     = Courses()
     self.taken_courses  = Courses()
 
+    #If the Major is specified, build the self.major_reqs list automatically.
+    if(self.major is not None):
+      self.defineMajorReqs()
+
+  def _returnFile(self, file):
+    """
+    Private Class method that builds a file path to the CSV that contains
+    a major's requirements or throws an error if the specified major doesn't
+    have a cooresponding file or throws an error we've reached here without the
+    major being specified
+    """
+    if (self.major is not None):
+      if (file is None):
+        file = "DATA/required_" + self.major + "_courses.csv"
+
+      if not os.path.isfile(file):
+        raise IOError("File " + file + " cannot be opened.")
+    else:
+      raise ValueError("Either set the student's major or specify a Major Requirements file to use.")
+
+    return file
+    
   def defineMajorReqs(self, file=None):
     """
     Opens a specified CVS file and builds a Courses list object of those
@@ -64,22 +87,10 @@ class Student(object):
           set automatically.
     """
 
-    if (self.major is not None and file is None):
-      if (self.major == "PHY"):
-        file = "DATA/required_PHY_courses.csv"
-      elif (self.major == "CS"):
-        file = "DATA/required_CS_courses.csv"
-      elif (self.major == "EE"):
-        file = "DATA/required_EE_courses.csv"
-      elif (self.major == "IM"):
-        file = "DATA/required_IM_courses.csv"
-      #elif (self.major == ""):
-      #  file =
-    elif (file is None):
-      raise ValueError("Either set the student's major or specify a Major Requirements file to use.")
-        
+    # Clear any previous Major information.
+    self.major_reqs.clearAllCourses()
 
-    with open(file) as csvfile:
+    with open((self._returnFile(file))) as csvfile:
       reader = csv.reader(csvfile)
       for line in reader:
         if (not re.search("^#", line[0])):
@@ -97,7 +108,6 @@ class Student(object):
     with open(file) as student_file:
       for line in student_file:
         for course in self.major_reqs.returnCourses():
-          #print("\t\t" + course.returnCourseId() + ":")
 
           (this_course, course_num) = course.returnCourseId().split("-")
 
@@ -148,12 +158,26 @@ class Student(object):
             self.taken_courses.addCourse(course_obj)
           sentinel += 1
 
+  def compareMajorToTranscript(self):
+    """
+    Once the Major's requirements and the transcripts are added into their 
+    respected lists, this function checks the Major requirements for
+    completion and adds that information to the Major list.
+    """
+
+    for course in self.taken_courses.returnCourses():
+      for major_req in self.major_reqs.returnCourses():
+        if (course.returnCourseId() == major_req.returnCourseId()):
+          major_req.setGradeEarned(course.returnGradeEarned())
+          major_req.setTaken(True)
+
   """
   Setters
   """
 
   def setMajor(self, which_major):
     self.major = which_major
+    self.defineMajorReqs(None)
 
   """
   Getters
@@ -173,11 +197,20 @@ class Student(object):
   """
 
   def printMajorReqs(self):
+    print("Major Requirements")
     for course_obj in self.major_reqs.returnCourses():
-      print("Course ID: " + course_obj.returnCourseId(), end=" ")
-      print("Course Name: " + course_obj.returnCourseName())
-      print("Credits: " + course_obj.returnCredits(), end=" ")
-      print("Semester: " + course_obj.returnSugSemester(), end=" ")
+      print("\tCourse ID: " + course_obj.returnCourseId(), end=" ")
+
+      print("\tCourse Name: " + course_obj.returnCourseName())
+
+      print("\tCredits: " + course_obj.returnCredits(), end=" ")
+      print("\t\tSemester: " + course_obj.returnSugSemester())
+
+      print("\tClass taken: ", end=" ")
+      print(course_obj.returnTaken(), end=" ")
+      print("\tGrade earned: ", end=" ")
+      print(course_obj.returnGradeEarned())
+
       # Need to loop through Courses List here.
       #print("Pre Requesites " + course_obj.returnCoursePrereqs())
       #print("Co Requesites " + course_obj.returnCourseCoreqs())
@@ -185,5 +218,3 @@ class Student(object):
 
   def printCourses(self):
     self.taken_courses.printCourses()
-    #for c in self.taken_courses.returnCourses():
-    #  c.printCourse()

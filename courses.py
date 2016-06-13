@@ -44,6 +44,9 @@ class Courses(object):
   def addCourse(self, course):
     self.course_list.append(course)
 
+  def clearAllCourses(self):
+    self.course_list = []
+
   """
   Getter
   """
