@@ -107,6 +107,7 @@ class Student(object):
 
     with open(file) as student_file:
       for line in student_file:
+        line.strip()
         for course in self.major_reqs.returnCourses():
 
           (this_course, course_num) = course.returnCourseId().split("-")
@@ -115,6 +116,7 @@ class Student(object):
             course.setTaken(True)
             returned_line = line.split()
             if (returned_line[-1] == "TR" or returned_line[-1] == "W"
+                or returned_line[-1] == "P"
              or (FAPlib.is_number(returned_line[-1])
                 and float(returned_line[-1]) >= 0.0
                 and float(returned_line[-1]) <= 4.0)):
@@ -127,34 +129,59 @@ class Student(object):
     """
 
     with open(file) as student_file:
-      # Initialize Sentinel - For most classes, Credit Hours and Quality Points
-      #   show up over two lines.
+      # Initialize Sentinel - For most classes Credit Hours appear on the
+      # next line
       sentinel = 0
+      # Initialize Sentinel_2 - Change from classes that are taken
+      # to classes that are taking.
+      sentinel_2 = False
 
       for line in student_file:
+        line.strip()
         # Skip empty lines.
         if (re.match(r'^\s+$', line)):
           continue
 
-        # We've reached the two trailing lines, so reset the sentinel.
+        # We've got the Credits from the 2nd line, so reset sentinel
         if (sentinel > 1):
           sentinel = 0
 
+        if (re.search(r'COURSES IN PROGRESS', line)):
+            sentinel_2 = True
+
+        # Only process lines that start with a Course Identifier or 
+        #   when the sentinel is tripped.   
         if (re.search(r'[A-Z]{2,3}\s{1,3}(?:\d{3}|ELE)\s', line)
             or sentinel > 0):
           if (sentinel == 0):
-            sl = line.strip().split()
-            #print(sl[2:-1])
+            sl = line.split()
+
+            # Some lines have a UG indicating Undergraduate
+            #   Why? I don't know, but we need to ignore it.
             if (sl[2] == "UG"):
               course_name = " ".join(map(str, sl[3:-1]))
             else:
               course_name = " ".join(map(str, sl[2:-1]))
 
-            course_obj = Course(sl[0] + "-" + sl[1], course_name, 0, 0,
-                                  True, sl[-1])
+            if (sentinel_2):
+                course_obj = Course(sl[0] + "-" + sl[1], " ".join(map(str, sl[3:])), 0, 0,
+                                      False, 0.0)
+            else:
+                course_obj = Course(sl[0] + "-" + sl[1], course_name, 0, 0,
+                                      True, sl[-1])
+          # We're processing the 2nd line, which could, in fact be a
+          # continuation of the first line. We need special processing for it.
           elif (sentinel == 1):
-            val = line.strip().split()
-            course_obj.setCredits(val[-1])
+            val = line.split()
+            if len(val) > 1:
+                course_obj.setGradeEarned(val[-1])
+                temp_course_title = course_obj.returnCourseName() + " "
+                temp_course_title += " ".join(val[:-1])
+                course_obj.setCourseName(temp_course_title)
+                continue
+            else:
+                course_obj.setCredits(val[-1])
+
             self.taken_courses.addCourse(course_obj)
           sentinel += 1
 
