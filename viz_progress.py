@@ -25,7 +25,7 @@ __version__ = "1.0"
 
 # Set constants
 GOOD_COLOR_1 = "#0CEB13"
-GOOD_COLOR_2 = "#8CF59A"
+GOOD_COLOR_2 = "#2DB532"
 NEUTRAL_COLOR_1 = "#CFD4D0"
 NEUTRAL_COLOR_2 = "#C0C0C0"
 WARNING_COLOR_1 = "#E8E413"
@@ -64,7 +64,7 @@ def showPosEvent(event):
 def onLeftClick(event):
     print('Got left mouse button click: ', end=' ')
     showPosEvent(event)
-    print(event.widget.find_closest(event.x, event.y))
+    print(event.widget.find_overlapping(event.x, event.y, event.x+5, event.y+5))
 
 # Create Command-line option parser.
 parser = OptionParser(usage="usage: %prog [options]", version="%prog 1.0")
@@ -82,6 +82,7 @@ checkRequiredArguments(options, parser)
 
 # Create Tk object.
 master = Tk()
+master.wm_title("Advising Vizualizer")
 
 # Make a canvas.
 w = Canvas(master, width=1800, height=800)
@@ -130,8 +131,8 @@ for course in course_list:
     text_string += str(course.returnCourseName())[0:27]
     text_string += "\n"
 
-    fill_color = None
-    active_fill = None
+    fill_color = "#ffffff"
+    active_fill = "#eeeeee"
 
     if (course.returnTaken() and course.returnGradeEarned() != "W"
             and course.returnGradeEarned() != "TR"
@@ -151,9 +152,6 @@ for course in course_list:
     elif course.returnGradeEarned() == "P":
         fill_color = GOOD_COLOR_1
         active_fill = GOOD_COLOR_2
-    else:
-        fill_color = None
-        active_fill = None
 
     w.create_rectangle(start_x, start_y, stop_x, stop_y, dash=(4,4),
                         fill=fill_color, activefill = active_fill,
@@ -176,6 +174,4 @@ w.create_window((0,0), anchor=NW)
 w.update_idletasks()
 w.config(scrollregion = w.bbox("all") )
 
-for child in w.children.values():
-    print(child)
 master.mainloop()
